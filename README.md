@@ -1,94 +1,120 @@
-# Coinbase Retail API Key Validator
+# Coinbase Retail API Key Validator (Advanced Trade API v3)
 
-This project provides a simple Python script to safely validate a **Coinbase Retail (CDP)** API Key and Secret (ECDSA private key) before using them in crypto tax or accounting platforms.
+This tool validates a **Coinbase Retail API Key and Secret** for the **Advanced Trade API (v3)** using ECDSA (ES256) authentication. It's designed for **accounting professionals** and **admins** who need to confirm credentials **before integrating with a crypto tax platform**.
 
-## Who This Is For
+---
 
-This tool is designed for **accounting professionals, crypto finance teams, and administrators** who:
+## 🚨 API Key Security Warning
 
-* Need to validate a **Coinbase Retail API key and secret**
-* Want to confirm the credentials work **before** plugging them into accounting/tax platforms
-* Prefer a simple, safe, and testable Python-based approach
+API keys and secrets allow full access to sensitive account data. Always:
 
-## Protect Your API Key and Secret
+* **Keep your key and secret private**
+* Avoid sharing or storing them in insecure locations
+* Revoke any key if you suspect it has been compromised
 
-Your API key and secret grant access to your Coinbase data. Treat them like passwords.
+---
 
-* **Never share** your private key or upload it to public sites (like GitHub).
-* Store your `cdp_api_key.json` file **in a secure folder** on your machine.
-* Immediately **revoke the key** if you believe it was copied or used unsafely.
+## ✅ What This Tool Does
 
-## What This Script Does
+* Accepts your `API Key ID` and `ECDSA Private Key`
+* Creates a JWT for Coinbase's OAuth-style authentication
+* Sends a secure test request to `/api/v3/brokerage/accounts`
+* Confirms whether your credentials are **valid and active**
 
-* Loads your Coinbase Retail API key and ECDSA private key
-* Creates a JWT (JSON Web Token) used for authentication
-* Sends a test request to the Coinbase Retail API
-* Confirms whether your key and secret are valid
+---
 
-If validation fails, the script will help identify issues like:
+## 🔐 Input Format
 
-* Malformed or incomplete private key
-* System time issues
-* Copy/paste corruption of the private key
+Paste your credentials directly into the script:
 
-## What Is `cdp_api_key.json`?
+```py
+API_KEY_NAME = "organizations/.../apiKeys/your-key-id"
 
-This is the file you download from the Coinbase Developer Portal when generating a Retail API Key. It contains two important fields:
+PRIVATE_KEY_PEM = """-----BEGIN EC PRIVATE KEY-----
+MHcCAQEE...
+-----END EC PRIVATE KEY-----"""
+```
+
+You may also use the `cdp_api_key.json` file downloaded from Coinbase. It contains:
 
 ```json
 {
   "name": "organizations/.../apiKeys/your-key-id",
-  "privateKey": "-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
+  "privateKey": "-----BEGIN EC PRIVATE KEY-----\\n...\\n-----END EC PRIVATE KEY-----"
 }
 ```
 
-You can either use this file directly, or paste the contents into the script manually (use caution).
+---
 
-## Fixing `\n` in the Private Key
+## 🛠️ Fixing the `\n` Format
 
-When copying the secret key from the `cdp_api_key.json` file or a message:
+If your private key looks like this:
 
-* You may see `\n` characters in the key like this:
+```
+-----BEGIN EC PRIVATE KEY-----\nMHcCAQEE...\n-----END EC PRIVATE KEY-----
+```
 
-  ```
-  -----BEGIN EC PRIVATE KEY-----\nMHcCAQEE...==\n-----END EC PRIVATE KEY-----\n
-  ```
+You **must fix it** by converting escaped `\n` into actual new lines:
 
-* You **must convert these escaped `\n` values into real line breaks**. For example:
+**Incorrect:**
 
-  **Wrong (one-liner with `\n`):**
+```python
+PRIVATE_KEY_PEM = "-----BEGIN EC PRIVATE KEY-----\\nMHcCAQEE...\\n-----END EC PRIVATE KEY-----"
+```
 
-  ```
-  -----BEGIN EC PRIVATE KEY-----\nMHcCAQEE...==\n-----END EC PRIVATE KEY-----\n
-  ```
+**Correct:**
 
-  **Correct (multiline PEM format):**
+```python
+PRIVATE_KEY_PEM = """-----BEGIN EC PRIVATE KEY-----
+MHcCAQEE...
+-----END EC PRIVATE KEY-----"""
+```
 
-  ```
-  -----BEGIN EC PRIVATE KEY-----
-  MHcCAQEE...==
-  -----END EC PRIVATE KEY-----
-  ```
+Copying from screenshots or formatted messages may corrupt the key. When in doubt:
 
-* If you're copying from a screenshot or chat, **check for spacing or missing characters**, and always verify the formatting.
+* Use a plaintext editor
+* Redownload `cdp_api_key.json` from the Developer Portal
+* Verify line breaks and remove extra characters
 
-## API Version Supported
+---
 
-This validator uses the [Coinbase Retail (CDP) API v3 Authentication](https://docs.cdp.coinbase.com/cdp-apis/docs/welcome), specifically:
+## 📦 API Version
 
-* JWT-based auth
-* ECDSA (ES256) private keys
-* OAuth token flow (for `cdp_service` audience)
+This script is built for:
 
-It is **not** compatible with Coinbase Exchange or Coinbase Pro API keys.
+* **Coinbase Advanced Trade API (v3)**
+* Using [JWT-based authentication](https://docs.cdp.coinbase.com/advanced-trade/docs/rest-api-auth)
+* Works with `/api/v3/brokerage/...` endpoints only
 
-## Getting Started
+---
 
-1. Clone this repo or copy the script.
-2. Make sure Python 3.7+ is installed.
-3. Run the script with your `cdp_api_key.json` file or paste your credentials.
-4. The script will tell you if your key/secret are valid.
+## 🔗 Key Resources
 
-## Disclaimer
+* [🔐 Authentication Guide](https://docs.cdp.coinbase.com/advanced-trade/docs/rest-api-auth)
+* [📚 API Reference (v3)](https://docs.cdp.coinbase.com/advanced-trade/reference)
+* [📄 API Overview](https://docs.cdp.coinbase.com/advanced-trade/docs/api-overview)
+* [🚀 Getting Started](https://docs.cdp.coinbase.com/advanced-trade/docs/welcome)
 
-This script is provided as a convenience tool for credential validation only. You are solely responsible for safeguarding your credentials and ensuring secure use of your API keys.
+---
+
+## 🧪 How to Use
+
+1. Copy the script from this repo
+2. Install dependencies: `pip install PyJWT[crypto] cryptography requests`
+3. Paste your `API_KEY_NAME` and properly formatted `PRIVATE_KEY_PEM`
+4. Run the script — it will output validation success or error messages
+
+---
+
+## 🧯 Common Issues
+
+* **Malformed Private Key**: Check for line breaks, invalid characters
+* **Wrong API Version**: This only supports **Advanced Trade v3**, not Pro/Exchange
+* **Missing Permissions**: Ensure your key includes **View accounts** permission
+* **Incorrect System Time**: JWTs are time-sensitive — ensure your system clock is accurate
+
+---
+
+## 📝 License
+
+This script is provided for educational and operational validation purposes only. You are responsible for the secure handling and storage of your credentials.
